@@ -1,20 +1,24 @@
-
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c11
+SRC = main.c # Only include main.c if math_nn is not needed
+OBJ_DIR = build
+OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRC))
+DEPS = $(wildcard *.h)
 
 all: main
 
-main: main.o math_nn.o
-	$(CC) $(CFLAGS) -o main main.o math_nn.o -lm
+main: $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^ -lm
 
-main.o: main.c
-	$(CC) $(CFLAGS) -c main.c
+$(OBJ_DIR)/%.o: %.c $(DEPS)
+	@mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-math_nn.o: math_nn.c
-	$(CC) $(CFLAGS) -c math_nn.c
+build: $(OBJ)
+	$(CC) $(CFLAGS) -o main $(OBJ) -lm
 
 clean:
-	rm -f *.o main
+	rm -rf $(OBJ_DIR) main
 
 run: all
 	./main
