@@ -1,24 +1,32 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c11
-SRC = main.c # Only include main.c if math_nn is not needed
 OBJ_DIR = build
-OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRC))
 DEPS = $(wildcard *.h)
 
-all: main
+# Define source files for main executable
+MAIN_SRC = main.c math_nn.c
+MAIN_OBJ = $(MAIN_SRC:%.c=$(OBJ_DIR)/%.o)
 
-main: $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+# Define source files for test executable
+TEST_SRC = test_math_nn.c math_nn.c
+TEST_OBJ = $(TEST_SRC:%.c=$(OBJ_DIR)/%.o)
 
+# Pattern rule to build object files
 $(OBJ_DIR)/%.o: %.c $(DEPS)
 	@mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-build: $(OBJ)
-	$(CC) $(CFLAGS) -o main $(OBJ) -lm
+all: build
+
+build: $(MAIN_OBJ)
+	$(CC) $(CFLAGS) -o main $(MAIN_OBJ) -lm
+
+run: build
+	./main
+
+test: $(TEST_OBJ)
+	$(CC) $(CFLAGS) -o test_math_nn $(TEST_OBJ) -lm
+	./test_math_nn
 
 clean:
-	rm -rf $(OBJ_DIR) main
-
-run: all
-	./main
+	rm -rf $(OBJ_DIR) main test_math_nn
