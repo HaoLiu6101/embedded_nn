@@ -17,6 +17,7 @@ float tanh_act(float x) {
 // This function takes in a vector and returns the softmax activation of
 // the vector.
 // out[m, p] = a[m, n] * b[n, p]
+// out[batch, out_dim] = a[batch, in_dim] * b[in_dim, out_dim]
 void matmul(float* out, float* a, float* b, int m, int n, int p) {
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < p; j++) {
