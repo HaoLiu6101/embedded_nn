@@ -13,7 +13,10 @@ float tanh_act(float x) {
 }
 
 
-// implement the softmax activation function
+// Implement the matrix multiplication activation function
+// This function takes in a vector and returns the softmax activation of
+// the vector.
+// out[m, p] = a[m, n] * b[n, p]
 void matmul(float* out, float* a, float* b, int m, int n, int p) {
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < p; j++) {
@@ -26,7 +29,8 @@ void matmul(float* out, float* a, float* b, int m, int n, int p) {
 }
 
 
-// implement the softmax activation function
+// implement add function at vector level 
+// out[size] = a[size] + b[size]
 void add(float* out, float* a, float* b, int size) {
     for (int i = 0; i < size; i++) {
         out[i] = a[i] + b[i];
@@ -34,7 +38,9 @@ void add(float* out, float* a, float* b, int size) {
 }
 
 
-// implement the softmax activation function
+// implement the element wise multiplication activation function
+//out[size] = a[size] * b[size]
+//          =[a1*b1 a2*b2 a3*b3 ...]
 void mul(float* out, float* a, float* b, int size) {
     for (int i = 0; i < size; i++) {
         out[i] = a[i] * b[i];
@@ -42,14 +48,14 @@ void mul(float* out, float* a, float* b, int size) {
 }
 
 
-// implement the softmax activation function
+// implement the sigmoid activation function at vector level 
 void sigmoid_act_vec(float* out, float* x, int size) {
     for (int i = 0; i < size; i++) {
         out[i] = sigmoid_act(x[i]);
     }
 }
 
-// implement the softmax activation function
+// implement the tanh activation function at vector level
 void tanh_act_vec(float* out, float* x, int size) {
     for (int i = 0; i < size; i++) {
         out[i] = tanh_act(x[i]);
