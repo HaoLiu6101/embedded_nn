@@ -47,78 +47,78 @@ typedef struct {
 } GRUModel;
 
 
-void init_gru_config(GRUConfig* config) {
-    config->input_size = 15;    // Set the input size
-    config->hidden_size = 64;   // Set the hidden layer size
-    config->output_size = 4;    // Set the output size
-    config->num_layers = 3;     // Set the number of GRU layers
+void init_gru_config(GRUConfig* config_ptr) {
+    config_ptr->input_size = 15;    // Set the input size
+    config_ptr->hidden_size = 64;   // Set the hidden layer size
+    config_ptr->output_size = 4;    // Set the output size
+    config_ptr->num_layers = 3;     // Set the number of GRU layers
 }
 
-void init_gru_weights(GRUWeights* weights, GRUConfig* config) {
+void init_gru_weights(GRUWeights* weights_ptr, GRUConfig* config_ptr) {
     // initialize the weights of GRU
     // allocate memory for all the weights 
 
-    int num_layers = config->num_layers;
-    int hidden_size = config->hidden_size;
-    int input_size = config->input_size;
-    int output_size = config->output_size;
-    weights->W_ir = (float*)calloc(num_layers * hidden_size * input_size, sizeof(float));
-    weights->W_iz = (float*)calloc(num_layers * hidden_size * input_size, sizeof(float));
-    weights->W_in = (float*)calloc(num_layers * hidden_size * input_size, sizeof(float));
-    weights->W_hr = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
-    weights->W_hz = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
-    weights->W_hn = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
-    weights->b_ir = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    weights->b_iz = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    weights->b_in = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    weights->b_hr = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    weights->b_hz = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    weights->b_hn = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    weights->W_out = (float*)calloc(output_size * hidden_size, sizeof(float));
-    weights->b_out = (float*)calloc(output_size, sizeof(float));
+    int num_layers = config_ptr->num_layers;
+    int hidden_size = config_ptr->hidden_size;
+    int input_size = config_ptr->input_size;
+    int output_size = config_ptr->output_size;
+    weights_ptr->W_ir = (float*)calloc(num_layers * hidden_size * input_size, sizeof(float));
+    weights_ptr->W_iz = (float*)calloc(num_layers * hidden_size * input_size, sizeof(float));
+    weights_ptr->W_in = (float*)calloc(num_layers * hidden_size * input_size, sizeof(float));
+    weights_ptr->W_hr = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
+    weights_ptr->W_hz = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
+    weights_ptr->W_hn = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
+    weights_ptr->b_ir = (float*)calloc(num_layers * hidden_size, sizeof(float));
+    weights_ptr->b_iz = (float*)calloc(num_layers * hidden_size, sizeof(float));
+    weights_ptr->b_in = (float*)calloc(num_layers * hidden_size, sizeof(float));
+    weights_ptr->b_hr = (float*)calloc(num_layers * hidden_size, sizeof(float));
+    weights_ptr->b_hz = (float*)calloc(num_layers * hidden_size, sizeof(float));
+    weights_ptr->b_hn = (float*)calloc(num_layers * hidden_size, sizeof(float));
+    weights_ptr->W_out = (float*)calloc(output_size * hidden_size, sizeof(float));
+    weights_ptr->b_out = (float*)calloc(output_size, sizeof(float));
 }
 
 // Function to initialize GRU model run state
-void init_gru_run_state(GRURunState* state, GRUConfig* config) {
-    int num_layers = config->num_layers;
-    int hidden_size = config->hidden_size;
-    int input_size = config->input_size;
-    int output_size = config->output_size;
+void init_gru_run_state(GRURunState* state_ptr, GRUConfig* config_ptr) {
+    int num_layers = config_ptr->num_layers;
+    int hidden_size = config_ptr->hidden_size;
+    int input_size = config_ptr->input_size;
+    int output_size = config_ptr->output_size;
 
-    state->hidden_state_buffer = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    state->input_buffer = (float*)calloc(input_size, sizeof(float));
-    state->output_buffer = (float*)calloc(output_size, sizeof(float));
-    state->reset_gate_buffer = (float*)calloc(hidden_size, sizeof(float));
-    state->update_gate_buffer = (float*)calloc(hidden_size, sizeof(float));
-    state->candidate_hidden_buffer = (float*)calloc(hidden_size, sizeof(float));
+    state_ptr->hidden_state_buffer = (float*)calloc(num_layers * hidden_size, sizeof(float));
+    state_ptr->input_buffer = (float*)calloc(input_size, sizeof(float));
+    state_ptr->output_buffer = (float*)calloc(output_size, sizeof(float));
+    state_ptr->reset_gate_buffer = (float*)calloc(hidden_size, sizeof(float));
+    state_ptr->update_gate_buffer = (float*)calloc(hidden_size, sizeof(float));
+    state_ptr->candidate_hidden_buffer = (float*)calloc(hidden_size, sizeof(float));
 }
 
 // Function to free GRU model weights
-void free_gru_weights(GRUWeights* weights) {
-    free(weights->W_ir);
-    free(weights->W_iz);
-    free(weights->W_in);
-    free(weights->W_hr);
-    free(weights->W_hz);
-    free(weights->W_hn);
-    free(weights->b_ir);
-    free(weights->b_iz);
-    free(weights->b_in);
-    free(weights->b_hr);
-    free(weights->b_hz);
-    free(weights->b_hn);
-    free(weights->W_out);
-    free(weights->b_out);
+void free_gru_weights(GRUWeights* weights_ptr) {
+    free(weights_ptr->W_ir);
+    free(weights_ptr->W_iz);
+    free(weights_ptr->W_in);
+    free(weights_ptr->W_hr);
+    free(weights_ptr->W_hz);
+    free(weights_ptr->W_hn);
+    free(weights_ptr->b_ir);
+    free(weights_ptr->b_iz);
+    free(weights_ptr->b_in);
+    free(weights_ptr->b_hr);
+    free(weights_ptr->b_hz);
+    free(weights_ptr->b_hn);
+    free(weights_ptr->W_out);
+    free(weights_ptr->b_out);
 }
 
 // Function to free GRU model run state
-void free_gru_run_state(GRURunState* state) {
-    free(state->hidden_state_buffer);
-    free(state->input_buffer);
-    free(state->output_buffer);
-    free(state->reset_gate_buffer);
-    free(state->update_gate_buffer);
-    free(state->candidate_hidden_buffer);
+void free_gru_run_state(GRURunState* state_ptr) {
+    free(state_ptr->hidden_state_buffer);
+    free(state_ptr->input_buffer);
+    free(state_ptr->output_buffer);
+    free(state_ptr->reset_gate_buffer);
+    free(state_ptr->update_gate_buffer);
+    free(state_ptr->candidate_hidden_buffer);
 }
 
 void init_gru_model(GRUModel* model) {
