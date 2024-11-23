@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "math_nn.h"
 
 
@@ -133,7 +134,7 @@ void free_gru_model(GRUModel* model) {
     free_gru_run_state(&model->state);
 }
 
-void gru_forware(GRUModel* model, float* input) {
+void gru_forward(GRUModel* model, float* input) {
     GRUConfig* config = &model->config;
     GRUWeights* weights = &model->weights;
     GRURunState* state = &model->state;
@@ -171,9 +172,53 @@ void gru_forware(GRUModel* model, float* input) {
 
         float* h_prev = hidden_state_buffer + l * hidden_size;
         float* h_next = hidden_state_buffer + (l + 1) * hidden_size;
+
+        // rest gate 
+        matmul(reset_gate_buffer, input_buffer, W_ir, 1, input_size, hidden_size);
+        add(reset_gate_buffer, reset_gate_buffer, b_ir, hidden_size);
+        matmul(reset_gate_buffer, h_prev, W_hr, 1, hidden_size, hidden_size);
+        add(reset_gate_buffer, reset_gate_buffer, b_hr, hidden_size);
+        sigmoid_act_vec(reset_gate_buffer, reset_gate_buffer, hidden_size);
+
+        // update gate
+        matmul(update_gate_buffer, input_buffer, W_iz, 1, input_size, hidden_size);
+        add(update_gate_buffer, update_gate_buffer, b_iz, hidden_size);
+        matmul(update_gate_buffer, h_prev, W_hz, 1, hidden_size, hidden_size);
+        add(update_gate_buffer, update_gate_buffer, b_hz, hidden_size);
+        sigmoid_act_vec(update_gate_buffer, update_gate_buffer, hidden_size);
+
+        // candidate hidden state
+        matmul(candidate_hidden_state_buffer, input_buffer, W_in, 1, input_size, hidden_size);
+        add(candidate_hidden_state_buffer, candidate_hidden_state_buffer, b_in, hidden_size);
+
+        //hadamard product between rest gate and h_prev
+        float r_h_prev[hidden_size];
+        for (int i = 0; i < hidden_size; i++) {
+            r_h_prev[i] = reset_gate_buffer[i] * h_prev[i];
+        }
+
+        matmul(candidate_hidden_state_buffer, r_h_prev, W_hn, 1, hidden_size, hidden_size);
+        add(candidate_hidden_state_buffer, candidate_hidden_state_buffer, b_hn, hidden_size);
+        tanh_act_vec(candidate_hidden_state_buffer, candidate_hidden_state_buffer, hidden_size);
+
+        // update hidden state
+        for (int i = 0; i < hidden_size; i++) {
+            h_next[i] = update_gate_buffer[i] * h_prev[i] + (1 - update_gate_buffer[i]) * candidate_hidden_state_buffer[i];
+        }
+
+        // copy hidden state to output buffer
+        memcpy(input_buffer, h_next, hidden_size * sizeof(float));
+
+    }
+    //compute output
+    // output = W_out * hidden_state + b_out, here input buffer = hidden state because of the last loop
+    matmul(output_buffer, input_buffer, weights->W_out, 1, hidden_size, output_size);
+    add(output_buffer, output_buffer, weights->b_out, output_size);
+
 }
 
 int main() {
+    
     printf("Hello, World!\n");
 
     // create test case for tanh activation function
