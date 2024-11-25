@@ -57,3 +57,4 @@ build/
 out/
 
 main
+test_math_nn
