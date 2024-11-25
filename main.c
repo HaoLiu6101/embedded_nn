@@ -83,7 +83,7 @@ void init_gru_weights(GRUWeights* weights, GRUConfig* config) {
 void init_gru_run_state(GRURunState* state, GRUConfig* config) {
     int num_layers = config->num_layers;
     int hidden_size = config->hidden_size;
-    //int input_size = config->input_size;    //considering hidden size is greated than input size, allocate more memory
+    // int input_size = config->input_size;    //considering hidden size is greated than input size, allocate more memory
     int output_size = config->output_size;
 
     state->hidden_state_buffer = (float*)calloc(num_layers * hidden_size, sizeof(float));
@@ -114,12 +114,38 @@ void free_gru_weights(GRUWeights* weights) {
 
 // Function to free GRU model run state
 void free_gru_run_state(GRURunState* state) {
-    free(state->hidden_state_buffer);
-    free(state->input_buffer);
-    free(state->output_buffer);
-    free(state->reset_gate_buffer);
-    free(state->update_gate_buffer);
-    free(state->candidate_hidden_state_buffer);
+    if (state->hidden_state_buffer) {
+        free(state->hidden_state_buffer);
+        state->hidden_state_buffer = NULL;
+        printf("free hidden state buffer\n");
+    }
+
+    if (state->output_buffer) {
+        free(state->output_buffer);
+        state->output_buffer = NULL;
+        printf("free output buffer\n");
+    }
+    if (state->reset_gate_buffer) {
+        free(state->reset_gate_buffer);
+        state->reset_gate_buffer = NULL;
+        printf("free reset gate  buffer\n");
+    }
+    if (state->update_gate_buffer) {
+        free(state->update_gate_buffer);
+        state->update_gate_buffer = NULL;
+        printf("free update gate buffer\n");
+    }
+    if (state->candidate_hidden_state_buffer) {
+        free(state->candidate_hidden_state_buffer);
+        state->candidate_hidden_state_buffer = NULL;
+        printf("free candidate hidden state buffer\n");
+    }
+    if (state->input_buffer) {
+        printf("start to free input buffer\n");
+        free(state->input_buffer);
+        state->input_buffer = NULL;
+        printf("free input buffer\n");
+    }
 }
 
 void init_gru_model(GRUModel* model) {
@@ -144,7 +170,7 @@ void gru_forward(GRUModel* model, float* input) {
     int output_size = config->output_size;
     int num_layers = config->num_layers;
 
-    float* input_buffer = state->input_buffer;  // bear in mind, input buffer size is hidden size
+    float* input_buffer = state->input_buffer;  // input buffer size is input size
     float* hidden_state_buffer = state->hidden_state_buffer;
     float* output_buffer = state->output_buffer;
     float* reset_gate_buffer = state->reset_gate_buffer;
@@ -152,16 +178,13 @@ void gru_forward(GRUModel* model, float* input) {
     float* candidate_hidden_state_buffer = state->candidate_hidden_state_buffer;
 
     // Copy input to input buffer
-    memcpy(input_buffer, input, input_size * sizeof(float)); // for the first layer, input buffer is the input
+    memcpy(input_buffer, input, input_size * sizeof(float)); // copy input of size 15
+    memset(input_buffer + input_size, 0, (hidden_size - input_size) * sizeof(float)); // initialize remaining part of input buffer to zero
 
     // loop over layers
     for (int l = 0; l < num_layers; l++) {
         // define a cell size for each layer
-        int cell_size = hidden_size;
-
-        if (l == 0) {
-            cell_size = input_size;
-        }
+        int cell_size = (l == 0) ? input_size : hidden_size;
 
         // get the memory address of weights
         float* W_ir = weights->W_ir + l * hidden_size * hidden_size;
@@ -231,11 +254,22 @@ int main() {
     
     printf("Hello, World!\n");
 
-    // create test case for tanh activation function
-    float x = 0.5f;
-    float y = tanh_act(x);
+    // init a GRU model
+    GRUModel model;
+    init_gru_model(&model);
 
-    // print the result
-    printf("tanh(%f) = %f\n", x, y);
+    // create a test input
+    float input[15] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6};
+
+    // run the GRU model
+    gru_forward(&model, input);
+
+    // print the output
+    for (int i = 0; i < model.config.output_size; i++) {
+        printf("output[%d] = %f\n", i, model.state.output_buffer[i]);
+    }
+
+    // // free the GRU model
+    free_gru_model(&model);
     return 0;
 }
