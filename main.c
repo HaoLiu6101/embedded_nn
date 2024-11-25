@@ -161,7 +161,9 @@ void gru_forward(GRUModel* model, float* input) {
 
     // loop over layers
     for (int l = 0; l < num_layers; l++) {
+
         // define a cell size for each layer
+        // this cell size determines how this cell is calculated 
         int cell_size = (l == 0) ? input_size : hidden_size;
 
         // get the memory address of weights
@@ -210,14 +212,13 @@ void gru_forward(GRUModel* model, float* input) {
 
         // update hidden state for the cell 
         for (int i = 0; i < hidden_size; i++) {
-            //h_temp[i] = update_gate_buffer[i] * h_prev[i] + (1 - update_gate_buffer[i]) * candidate_hidden_state_buffer[i];
             hidden_cell_temp[i] = update_gate_buffer[i] * h_prev[i] + (1 - update_gate_buffer[i]) * candidate_hidden_state_buffer[i];
         }
 
-        // copy temp hidden state to output buffer
+        // copy temp hidden state to input buffer for next cell in same time stamp
         memcpy(input_buffer, hidden_cell_temp, hidden_size * sizeof(float));
 
-        // copy temp hidden state in h_next to h_prev for the next layer
+        // copy temp hidden state to hidden state buffer at the current memory address for next time stamp
         memcpy(hidden_state_buffer + l * hidden_size, hidden_cell_temp, hidden_size * sizeof(float));
 
     }
