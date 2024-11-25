@@ -38,6 +38,7 @@ typedef struct {
     float* reset_gate_buffer;            // Reset gate buffer (hidden_size)
     float* update_gate_buffer;            // Update gate buffer (hidden_size)
     float* candidate_hidden_state_buffer;            // New gate buffer (hidden_size)
+    float* hidden_cell_temp;                //hidden cell buffer
 } GRURunState;
 
 /// GRU model
@@ -92,6 +93,7 @@ void init_gru_run_state(GRURunState* state, GRUConfig* config) {
     state->reset_gate_buffer = (float*)calloc(hidden_size, sizeof(float));
     state->update_gate_buffer = (float*)calloc(hidden_size, sizeof(float));
     state->candidate_hidden_state_buffer = (float*)calloc(hidden_size, sizeof(float));
+    state->hidden_cell_temp = (float*)calloc(hidden_size, sizeof(float));
 }
 
 // Function to free GRU model weights
@@ -120,6 +122,7 @@ void free_gru_run_state(GRURunState* state) {
     free(state->reset_gate_buffer);
     free(state->update_gate_buffer);
     free(state->candidate_hidden_state_buffer);
+    free(state->hidden_cell_temp);
 }
 
 void init_gru_model(GRUModel* model) {
@@ -150,6 +153,7 @@ void gru_forward(GRUModel* model, float* input) {
     float* reset_gate_buffer = state->reset_gate_buffer;
     float* update_gate_buffer = state->update_gate_buffer;
     float* candidate_hidden_state_buffer = state->candidate_hidden_state_buffer;
+    float* hidden_cell_temp = state->hidden_cell_temp;
 
     // Copy input to input buffer
     memcpy(input_buffer, input, input_size * sizeof(float)); // copy input of size 15
@@ -175,8 +179,6 @@ void gru_forward(GRUModel* model, float* input) {
         float* b_hn = weights->b_hn + l * hidden_size;
 
         float* h_prev = hidden_state_buffer + l * hidden_size;   // this is the hidden state of the previous layer
-        // this is the hidden state of this layer, used in two places, one is as cell input for next cell, one is h_prev of next layer
-        float* h_temp = (float*)calloc(hidden_size, sizeof(float));
 
         // rest gate 
         matmul(reset_gate_buffer, input_buffer, W_ir, 1, cell_size, hidden_size);
@@ -206,16 +208,17 @@ void gru_forward(GRUModel* model, float* input) {
         add(candidate_hidden_state_buffer, candidate_hidden_state_buffer, b_hn, hidden_size);
         tanh_act_vec(candidate_hidden_state_buffer, candidate_hidden_state_buffer, hidden_size);
 
-        // update hidden state
+        // update hidden state for the cell 
         for (int i = 0; i < hidden_size; i++) {
-            h_temp[i] = update_gate_buffer[i] * h_prev[i] + (1 - update_gate_buffer[i]) * candidate_hidden_state_buffer[i];
+            //h_temp[i] = update_gate_buffer[i] * h_prev[i] + (1 - update_gate_buffer[i]) * candidate_hidden_state_buffer[i];
+            hidden_cell_temp[i] = update_gate_buffer[i] * h_prev[i] + (1 - update_gate_buffer[i]) * candidate_hidden_state_buffer[i];
         }
 
-        // copy hidden state to output buffer
-        memcpy(input_buffer, h_temp, hidden_size * sizeof(float));
+        // copy temp hidden state to output buffer
+        memcpy(input_buffer, hidden_cell_temp, hidden_size * sizeof(float));
 
-        // copy hidden state in h_next to h_prev for the next layer
-        memcpy(hidden_state_buffer + l * hidden_size, h_temp, hidden_size * sizeof(float));
+        // copy temp hidden state in h_next to h_prev for the next layer
+        memcpy(hidden_state_buffer + l * hidden_size, hidden_cell_temp, hidden_size * sizeof(float));
 
     }
     //compute output
