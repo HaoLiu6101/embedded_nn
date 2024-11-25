@@ -1,6 +1,17 @@
 #ifndef MATH_NN_H
 #define MATH_NN_H
 
+#define MAX_ITER 1024
+
+// define math status struct 
+typedef enum {
+    MATH_SUCCESS = 0,
+    MATH_NULL_POINTER = -1,
+    MATH_INVALID_DIMENSION = -2,
+    MATH_OVERFLOW_RISK = -3,
+    MATH_EXCEEDS_MAX_ITER = -4,
+} MathStatus;
+
 // Function to compute the sigmoid activation
 float sigmoid_act(float x);
 
@@ -9,20 +20,20 @@ float tanh_act(float x);
 
 // Function to perform matrix multiplication
 // float out[m][p] = a[m][n] * b[n][p]
-void matmul(float* out, float* a, float* b, int m, int n, int p);
+MathStatus matmul(float* out, float* a, float* b, int m, int n, int p);
 
 // Function to perform element-wise addition
 //float out[size] = a[size] + b[size]
-void add(float* out, float* a, float* b, int size);
+MathStatus add(float* out, float* a, float* b, int size);
 
 // Function to perform element-wise multiplication
 //float out[size] = a[size] * b[size]
-void mul(float* out, float* a, float* b, int size);
+MathStatus mul(float* out, float* a, float* b, int size);
 
 // Function to perform element-wise sigmoid activation
-void sigmoid_act_vec(float* out, float* x, int size);
+MathStatus sigmoid_act_vec(float* out, float* x, int size);
 
 // Function to perform element-wise tanh activation
-void tanh_act_vec(float* out, float* x, int size);
+MathStatus tanh_act_vec(float* out, float* x, int size);
 
 #endif // MATH_NN_H
