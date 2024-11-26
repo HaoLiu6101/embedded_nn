@@ -48,22 +48,33 @@ int main() {
     init_gru_model(model);
 
 // Example input
-    float* input = (float*)calloc(15, sizeof(float)); // Adjust the size according to input_size
-    float* h_prev = (float*)calloc(3 * 64, sizeof(float)); // Allocate 3 * 64 floats and initialize to 0
-    float* output = (float*)calloc(4,sizeof(float)); // Adjust the size according to output_size
+    float* input = (float*)calloc(input_size, sizeof(float)); // Adjust the size according to input_size
+    float* h_prev = (float*)calloc(num_layers * hidden_size, sizeof(float)); // Allocate 3 * 64 floats and initialize to 0
+    float* output = (float*)calloc(output_size,sizeof(float)); // Adjust the size according to output_size
+    float* inter_input = (float*)calloc(hidden_size, sizeof(float));
 
-    // Forward pass through GRU layers
-    gru_layer_forward(&model->gru_layers[0], input, h_prev);
-    gru_layer_forward(&model->gru_layers[1], model->gru_layers[0].state.hidden_state_buffer, h_prev+64);
-    gru_layer_forward(&model->gru_layers[2], model->gru_layers[1].state.hidden_state_buffer, h_prev+128);
+
+    // // Forward pass through GRU layers
+    // gru_layer_forward(&model->gru_layers[0], input, h_prev);
+    // gru_layer_forward(&model->gru_layers[1], model->gru_layers[0].state.hidden_state_buffer, h_prev+64);
+    // gru_layer_forward(&model->gru_layers[2], model->gru_layers[1].state.hidden_state_buffer, h_prev+128);
+
+    for (int i = 0; i < num_layers; i++) {
+        if (i == 0) {
+            inter_input = input;
+        };
+        gru_layer_forward(&model->gru_layers[i], inter_input, h_prev+i*hidden_size);
+        memcpy(h_prev+i*hidden_size, model->gru_layers[i].state.hidden_state_buffer, model->gru_layers->config.hidden_size * sizeof(float));
+        inter_input = model->gru_layers[i].state.hidden_state_buffer;
+    }
 
     // Forward pass through the output layer
     linear_layer_forward(&model->output_layer, model->gru_layers[2].state.hidden_state_buffer, output);
 
-    // pass the output buffer in gru layers into next iteration
-    memcpy(h_prev, model->gru_layers[0].state.hidden_state_buffer, model->gru_layers->config.hidden_size * sizeof(float));
-    memcpy(h_prev+64, model->gru_layers[1].state.hidden_state_buffer, model->gru_layers->config.hidden_size * sizeof(float));
-    memcpy(h_prev+128, model->gru_layers[2].state.hidden_state_buffer, model->gru_layers->config.hidden_size * sizeof(float));
+    // // pass the output buffer in gru layers into next iteration
+    // memcpy(h_prev, model->gru_layers[0].state.hidden_state_buffer, model->gru_layers->config.hidden_size * sizeof(float));
+    // memcpy(h_prev+64, model->gru_layers[1].state.hidden_state_buffer, model->gru_layers->config.hidden_size * sizeof(float));
+    // memcpy(h_prev+128, model->gru_layers[2].state.hidden_state_buffer, model->gru_layers->config.hidden_size * sizeof(float));
 
 
 
