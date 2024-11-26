@@ -1,28 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include "math_nn.h"
 #include "gru.h"
 
 int main() {
-    printf("Hello, World!\n");
+    // Initialize GRU layer
+    GRULayer gru_layer;
+    init_gru_layer(&gru_layer);
 
-    // init a GRU model
-    GRUModel model;
-    init_gru_model(&model);
+    // Example input
+    float input[15] = {0.0}; // Adjust the size according to input_size
+    float h_prev[64] = {0.0}; // Adjust the size according to hidden_size
 
-    // create a test input
-    float input[15] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7};
+    // Forward pass
+    gru_layer_forward(&gru_layer, input, h_prev);
 
-    // run the GRU model
-    gru_forward(&model, input);
-
-    // print the output
-    for (int i = 0; i < model.config.output_size; i++) {
-        printf("output[%d] = %f\n", i, model.state.output_buffer[i]);
+    // Print the output hidden state
+    for (int i = 0; i < gru_layer.config.hidden_size; i++) {
+        printf("%f ", gru_layer.state.hidden_state_buffer[i]);
     }
+    printf("\n");
 
-    // free the GRU model
-    free_gru_model(&model);
+    // Free resources
+    free_gru_layer(&gru_layer);
+
     return 0;
 }

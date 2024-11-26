@@ -5,9 +5,7 @@
 typedef struct {
     int input_size;
     int hidden_size;
-    int output_size;
-    int num_layers;
-} GRUConfig;
+} GRULayerConfig;
 
 typedef struct {
     float* W_ir;
@@ -22,9 +20,7 @@ typedef struct {
     float* b_hr;
     float* b_hz;
     float* b_hn;
-    float* W_out;
-    float* b_out;
-} GRUWeights;
+} GRULayerWeights;
 
 typedef struct {
     float* hidden_state_buffer;
@@ -34,21 +30,21 @@ typedef struct {
     float* update_gate_buffer;
     float* candidate_hidden_state_buffer;
     float* hidden_cell_temp;
-} GRURunState;
+} GRULayerRunState;
 
 typedef struct {
-    GRUConfig config;
-    GRUWeights weights;
-    GRURunState state;
-} GRUModel;
+    GRULayerConfig config;
+    GRULayerWeights weights;
+    GRULayerRunState state;
+} GRULayer;
 
-void init_gru_config(GRUConfig* config);
-void init_gru_weights(GRUWeights* weights, GRUConfig* config);
-void init_gru_run_state(GRURunState* state, GRUConfig* config);
-void init_gru_model(GRUModel* model);
-void free_gru_weights(GRUWeights* weights);
-void free_gru_run_state(GRURunState* state);
-void free_gru_model(GRUModel* model);
-void gru_forward(GRUModel* model, float* input);
+void init_gru_layer_config(GRULayerConfig* config);
+void init_gru_layer_weights(GRULayerWeights* weights, GRULayerConfig* config);
+void init_gru_layer_run_state(GRULayerRunState* state, GRULayerConfig* config);
+void init_gru_layer(GRULayer* layer);
+void free_gru_layer_weights(GRULayerWeights* weights);
+void free_gru_layer_run_state(GRULayerRunState* state);
+void free_gru_layer(GRULayer* layer);
+void gru_layer_forward(GRULayer* layer, float* input, float* h_prev);
 
 #endif // GRU_H
