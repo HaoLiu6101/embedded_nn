@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,21 +16,47 @@ void init_gru_config(GRUConfig* config) {
 }
 
 void init_gru_weights(GRUWeights* weights, GRUConfig* config) {
+    int input_size = config->input_size;
     int num_layers = config->num_layers;
     int hidden_size = config->hidden_size;
     int output_size = config->output_size;
-    weights->W_ir = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
-    weights->W_iz = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
-    weights->W_in = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
-    weights->W_hr = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
-    weights->W_hz = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
-    weights->W_hn = (float*)calloc(num_layers * hidden_size * hidden_size, sizeof(float));
-    weights->b_ir = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    weights->b_iz = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    weights->b_in = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    weights->b_hr = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    weights->b_hz = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    weights->b_hn = (float*)calloc(num_layers * hidden_size, sizeof(float));
+
+    // initialize the number of weights for each layer
+    int num_W_ir = 0, num_W_iz = 0, num_W_in = 0;   //weight input to hidden
+    int num_b_ir = 0, num_b_iz = 0, num_b_in = 0;   //bias input to hidden
+    int num_W_hr = 0, num_W_hz = 0, num_W_hn = 0;   //weight hidden to hidden
+    int num_b_hr = 0, num_b_hz = 0, num_b_hn = 0;   //bias hidden to hidden
+
+    // loop through the number of layers and calculate the total number of weights
+    for(int l = 0; l < num_layers; l++){
+        int cell_size = (l == 0) ? input_size : hidden_size;
+
+        num_W_ir += cell_size * hidden_size;
+        num_W_iz += cell_size * hidden_size;
+        num_W_in += cell_size * hidden_size;
+        num_W_hr += hidden_size * hidden_size;
+        num_W_hz += hidden_size * hidden_size;
+        num_W_hn += hidden_size * hidden_size;
+        num_b_ir += hidden_size;
+        num_b_iz += hidden_size;
+        num_b_in += hidden_size;
+        num_b_hr += hidden_size;
+        num_b_hz += hidden_size;
+        num_b_hn += hidden_size;
+    }
+
+    weights->W_ir = (float*)calloc(num_W_ir, sizeof(float));
+    weights->W_iz = (float*)calloc(num_W_iz, sizeof(float));
+    weights->W_in = (float*)calloc(num_W_in, sizeof(float));
+    weights->W_hr = (float*)calloc(num_W_hr, sizeof(float));
+    weights->W_hz = (float*)calloc(num_W_hz, sizeof(float));
+    weights->W_hn = (float*)calloc(num_W_hn, sizeof(float));
+    weights->b_ir = (float*)calloc(num_b_ir, sizeof(float));
+    weights->b_iz = (float*)calloc(num_b_iz, sizeof(float));
+    weights->b_in = (float*)calloc(num_b_in, sizeof(float));
+    weights->b_hr = (float*)calloc(num_b_hr, sizeof(float));
+    weights->b_hz = (float*)calloc(num_b_hz, sizeof(float));
+    weights->b_hn = (float*)calloc(num_b_hn, sizeof(float));
     weights->W_out = (float*)calloc(output_size * hidden_size, sizeof(float));
     weights->b_out = (float*)calloc(output_size, sizeof(float));
 }
@@ -40,13 +65,24 @@ void init_gru_run_state(GRURunState* state, GRUConfig* config) {
     int num_layers = config->num_layers;
     int hidden_size = config->hidden_size;
     int output_size = config->output_size;
-    state->hidden_state_buffer = (float*)calloc(num_layers * hidden_size, sizeof(float));
-    state->input_buffer = (float*)calloc(hidden_size, sizeof(float));
+    int input_size = config->input_size;
+
+    // Set the input size to the maximum of the input and hidden sizes
+    input_size = (hidden_size > input_size) ? hidden_size : input_size;
+
+    state->hidden_state_buffer = (float*)calloc(num_layers * hidden_size, sizeof(float)); 
+    state->input_buffer = (float*)calloc(input_size, sizeof(float)); 
     state->output_buffer = (float*)calloc(output_size, sizeof(float));
     state->reset_gate_buffer = (float*)calloc(hidden_size, sizeof(float));
     state->update_gate_buffer = (float*)calloc(hidden_size, sizeof(float));
     state->candidate_hidden_state_buffer = (float*)calloc(hidden_size, sizeof(float));
     state->hidden_cell_temp = (float*)calloc(hidden_size, sizeof(float));
+}
+
+void init_gru_model(GRUModel* model) {
+    init_gru_config(&model->config);
+    init_gru_weights(&model->weights, &model->config);
+    init_gru_run_state(&model->state, &model->config);
 }
 
 void free_gru_weights(GRUWeights* weights) {
@@ -76,11 +112,6 @@ void free_gru_run_state(GRURunState* state) {
     free(state->hidden_cell_temp);
 }
 
-void init_gru_model(GRUModel* model) {
-    init_gru_config(&model->config);
-    init_gru_weights(&model->weights, &model->config);
-    init_gru_run_state(&model->state, &model->config);
-}
 
 void free_gru_model(GRUModel* model) {
     free_gru_weights(&model->weights);

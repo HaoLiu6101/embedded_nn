@@ -45,9 +45,9 @@ typedef struct {
 void init_gru_config(GRUConfig* config);
 void init_gru_weights(GRUWeights* weights, GRUConfig* config);
 void init_gru_run_state(GRURunState* state, GRUConfig* config);
+void init_gru_model(GRUModel* model);
 void free_gru_weights(GRUWeights* weights);
 void free_gru_run_state(GRURunState* state);
-void init_gru_model(GRUModel* model);
 void free_gru_model(GRUModel* model);
 void gru_forward(GRUModel* model, float* input);
 
