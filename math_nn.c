@@ -27,9 +27,9 @@ MathStatus matmul(float* out, float* a, float* b, int m, int n, int p) {
     }
 
     // check for valid dimensions
-    if (m <= 0 || n <= 0 || p <= 0 || m > MAX_ITER || n > MAX_ITER || p > MAX_ITER
+    if (m <= 0 || n <= 0 || p <= 0 || m > MAX_DIM || n > MAX_DIM || p > MAX_DIM
     ) {
-        return MATH_INVALID_DIMENSION;
+        return MATH_INVALID_DIM;
     }
 
     // check for potential overflow in the calculations
@@ -52,8 +52,8 @@ MathStatus matmul(float* out, float* a, float* b, int m, int n, int p) {
 // implement add function at vector level 
 // out[size] = a[size] + b[size]
 MathStatus add(float* out, float* a, float* b, int size) {
-    if (size > MAX_ITER) {
-        return MATH_INVALID_DIMENSION; // Exceeds maximum iteration limit
+    if (size > MAX_DIM) {
+        return MATH_INVALID_DIM; // Exceeds maximum iteration limit
     }
     for (int i = 0; i < size; i++) {
         out[i] = a[i] + b[i];
@@ -66,8 +66,8 @@ MathStatus add(float* out, float* a, float* b, int size) {
 //out[size] = a[size] * b[size]
 //          =[a1*b1 a2*b2 a3*b3 ...]
 MathStatus mul(float* out, float* a, float* b, int size) {
-    if (size > MAX_ITER) {
-        return MATH_INVALID_DIMENSION; // Exceeds maximum iteration limit
+    if (size > MAX_DIM) {
+        return MATH_INVALID_DIM; // Exceeds maximum iteration limit
     }
     for (int i = 0; i < size; i++) {
         out[i] = a[i] * b[i];
@@ -78,8 +78,8 @@ MathStatus mul(float* out, float* a, float* b, int size) {
 
 // implement the sigmoid activation function at vector level 
 MathStatus sigmoid_act_vec(float* out, float* x, int size) {
-    if (size > MAX_ITER) {
-        return MATH_INVALID_DIMENSION; // Exceeds maximum iteration limit
+    if (size > MAX_DIM) {
+        return MATH_INVALID_DIM; // Exceeds maximum iteration limit
     }
     for (int i = 0; i < size; i++) {
         out[i] = sigmoid_act(x[i]);
@@ -89,8 +89,8 @@ MathStatus sigmoid_act_vec(float* out, float* x, int size) {
 
 // implement the tanh activation function at vector level
 MathStatus tanh_act_vec(float* out, float* x, int size) {
-    if (size > MAX_ITER) {
-        return MATH_INVALID_DIMENSION; // Exceeds maximum iteration limit
+    if (size > MAX_DIM) {
+        return MATH_INVALID_DIM; // Exceeds maximum iteration limit
     }
     for (int i = 0; i < size; i++) {
         out[i] = tanh_act(x[i]);

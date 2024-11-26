@@ -1,15 +1,15 @@
 #ifndef MATH_NN_H
 #define MATH_NN_H
 
-#define MAX_ITER 1024
+#define MAX_DIM 1024
 
 // define math status struct 
 typedef enum {
     MATH_SUCCESS = 0,
     MATH_NULL_POINTER = -1,
-    MATH_INVALID_DIMENSION = -2,
+    MATH_INVALID_DIM = -2,
     MATH_OVERFLOW_RISK = -3,
-    MATH_EXCEEDS_MAX_ITER = -4,
+    MATH_EXCEEDS_MAX_DIM = -4,
 } MathStatus;
 
 // Function to compute the sigmoid activation
