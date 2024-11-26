@@ -5,9 +5,9 @@
 #include "math_nn.h"
 
 // Initialization functions
-void init_gru_layer_config(GRULayerConfig* config) {
-    config->input_size = 15;
-    config->hidden_size = 64;
+void init_gru_layer_config(GRULayerConfig* config, int input_size, int hidden_size) {
+    config->input_size = input_size;
+    config->hidden_size = hidden_size;
 }
 
 void init_gru_layer_weights(GRULayerWeights* weights, GRULayerConfig* config) {
@@ -41,8 +41,8 @@ void init_gru_layer_run_state(GRULayerRunState* state, GRULayerConfig* config) {
     state->hidden_cell_temp = (float*)calloc(hidden_size, sizeof(float));
 }
 
-void init_gru_layer(GRULayer* layer) {
-    init_gru_layer_config(&layer->config);
+void init_gru_layer(GRULayer* layer, int input_size, int hidden_size) {
+    init_gru_layer_config(&layer->config, input_size, hidden_size);
     init_gru_layer_weights(&layer->weights, &layer->config);
     init_gru_layer_run_state(&layer->state, &layer->config);
 }

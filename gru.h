@@ -38,10 +38,10 @@ typedef struct {
     GRULayerRunState state;
 } GRULayer;
 
-void init_gru_layer_config(GRULayerConfig* config);
+void init_gru_layer_config(GRULayerConfig* config, int input_size, int hidden_size);
 void init_gru_layer_weights(GRULayerWeights* weights, GRULayerConfig* config);
 void init_gru_layer_run_state(GRULayerRunState* state, GRULayerConfig* config);
-void init_gru_layer(GRULayer* layer);
+void init_gru_layer(GRULayer* layer, int input_size, int hidden_size);
 void free_gru_layer_weights(GRULayerWeights* weights);
 void free_gru_layer_run_state(GRULayerRunState* state);
 void free_gru_layer(GRULayer* layer);

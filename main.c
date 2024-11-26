@@ -1,11 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "gru.h"
+#include "linear.h"
+
+// typedef struct {
+//     GRULayer gru_cell0;
+//     GRULayer gru_cell1;
+//     GRULayer gru_cell2;
+//     LinearLayer output_layer;
+// } GRUStack;
+
+
+
 
 int main() {
     // Initialize GRU layer
     GRULayer gru_layer;
-    init_gru_layer(&gru_layer);
+    init_gru_layer(&gru_layer, 15, 64);
 
     // Example input
     float input[15] = {0.0}; // Adjust the size according to input_size

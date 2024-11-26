@@ -4,11 +4,11 @@ OBJ_DIR = build
 DEPS = $(wildcard *.h)
 
 # Define source files for main executable
-MAIN_SRC = main.c math_nn.c gru.c
+MAIN_SRC = main.c math_nn.c gru.c linear.c
 MAIN_OBJ = $(MAIN_SRC:%.c=$(OBJ_DIR)/%.o)
 
 # Define source files for test executable
-TEST_SRC = test_math_nn.c math_nn.c gru.c
+TEST_SRC = test_math_nn.c math_nn.c gru.c linear.c
 TEST_OBJ = $(TEST_SRC:%.c=$(OBJ_DIR)/%.o)
 
 # Pattern rule to build object files
