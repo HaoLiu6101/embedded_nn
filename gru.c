@@ -31,9 +31,9 @@ void init_gru_weights(GRUWeights* weights, GRUConfig* config) {
     for(int l = 0; l < num_layers; l++){
         int cell_size = (l == 0) ? input_size : hidden_size;
 
-        num_W_ir += cell_size * hidden_size;
-        num_W_iz += cell_size * hidden_size;
-        num_W_in += cell_size * hidden_size;
+        num_W_ir += cell_size * hidden_size; //(input_size + (num_layers - 1) * hidden_size) * hidden_size;
+        num_W_iz += cell_size * hidden_size; //(input_size + (num_layers - 1) * hidden_size) * hidden_size;
+        num_W_in += cell_size * hidden_size; //(input_size + (num_layers - 1) * hidden_size) * hidden_size;
         num_W_hr += hidden_size * hidden_size;
         num_W_hz += hidden_size * hidden_size;
         num_W_hn += hidden_size * hidden_size;
@@ -141,9 +141,10 @@ void gru_forward(GRUModel* model, float* input) {
 
     for (int l = 0; l < num_layers; l++) {
         int cell_size = (l == 0) ? input_size : hidden_size;
-        float* W_ir = weights->W_ir + l * hidden_size * hidden_size;
-        float* W_iz = weights->W_iz + l * hidden_size * hidden_size;
-        float* W_in = weights->W_in + l * hidden_size * hidden_size;
+
+        float* W_ir = weights->W_ir + l * hidden_size * hidden_size - (cell_size - input_size) * hidden_size;
+        float* W_iz = weights->W_iz + l * hidden_size * hidden_size - (cell_size - input_size) * hidden_size;
+        float* W_in = weights->W_in + l * hidden_size * hidden_size - (cell_size - input_size) * hidden_size;
         float* W_hr = weights->W_hr + l * hidden_size * hidden_size;
         float* W_hz = weights->W_hz + l * hidden_size * hidden_size;
         float* W_hn = weights->W_hn + l * hidden_size * hidden_size;
