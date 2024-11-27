@@ -44,7 +44,7 @@ void init_gru_layer_run_state(GRULayerRunState* state, GRULayerConfig* config);
 void init_gru_layer(GRULayer* layer, int input_size, int hidden_size);
 void free_gru_layer_weights(GRULayerWeights* weights);
 void free_gru_layer_run_state(GRULayerRunState* state);
-void free_gru_layer(GRULayer* layer);
+void free_gru_layer(GRULayer* layer, bool free_weights);
 void gru_layer_forward(GRULayer* layer, float* input, float* h_prev);
 
 #endif // GRU_H

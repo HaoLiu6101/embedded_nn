@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h> // Include the stdbool.h header for bool type
 #include "gru.h"
 #include "math_nn.h"
 
@@ -72,9 +73,13 @@ void free_gru_layer_run_state(GRULayerRunState* state) {
     free(state->hidden_cell_temp);
 }
 
-void free_gru_layer(GRULayer* layer) {
-    free_gru_layer_weights(&layer->weights);
+void free_gru_layer(GRULayer* layer, bool free_weights) {
+    printf("Freeing GRU layer...\n");
     free_gru_layer_run_state(&layer->state);
+
+    if (free_weights) {
+        free_gru_layer_weights(&layer->weights);
+    }
 }
 
 // Forward function
