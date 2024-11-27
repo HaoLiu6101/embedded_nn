@@ -153,7 +153,7 @@ int main() {
     int input_size = 15;
     int hidden_size = 64;
     int output_size = 4;
-    int num_layers = 3;
+    int num_layers = 5;
 
     float* data;
     size_t file_size;
@@ -162,7 +162,7 @@ int main() {
     GRUModel* model = (GRUModel*)malloc(sizeof(GRUModel));
     init_gru_model(model, model_config);
 
-    read_checkpoint("gru_weights.bin", &data, &file_size, model);
+    read_checkpoint("GRUModel_5_64_1_para.bin", &data, &file_size, model);
 
     // Example input
     float* input = (float*)calloc(input_size, sizeof(float)); // Adjust the size according to input_size
