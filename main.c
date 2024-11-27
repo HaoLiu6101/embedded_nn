@@ -100,6 +100,18 @@ void memory_map_weights(GRUModel* model, float *data_ptr) {
 
     model->output_layer.weights.bias = data_ptr + ptr_offset;
 
+    //print out the output layer weights and biases
+    printf("first Layer Weights: ");
+    for (int i = 0; i < 10; i++) {
+        printf("%f ", model->gru_layers[0].weights.W_ir[i]);
+    }
+    printf("\n");
+
+    printf("Output Layer Biases: ");
+    for (int i = 0; i < output_size; i++) {
+        printf("%f ", model->output_layer.weights.bias[i]);
+    }
+
     printf("Weights mapped.\n");
 }
 
@@ -154,15 +166,28 @@ int main() {
 
     // Example input
     float* input = (float*)calloc(input_size, sizeof(float)); // Adjust the size according to input_size
-    float* h_prev = (float*)calloc(num_layers * hidden_size, sizeof(float)); // Allocate 3 * 64 floats and initialize to 0
+    for (int i = 0; i < input_size; i++) {
+        input[i] = 0.4f; // Initialize to 1
+    }
+    float* h_prev = (float*)malloc(num_layers * hidden_size * sizeof(float)); // Allocate 3 * 64 floats
+    for (int i = 0; i < num_layers * hidden_size; i++) {
+        h_prev[i] = 0.5f; // Initialize to 1
+    }
     float* output = (float*)calloc(output_size, sizeof(float)); // Adjust the size according to output_size
     float* inter_input = NULL; // Initialize inter_input to NULL
+
 
     printf("Running forward pass through GRU layers...\n");
     for (int i = 0; i < num_layers; i++) {
         if (i == 0) {
             inter_input = input;
         }
+        //print out the input 
+        printf("Input: ");
+        for (int j = 0; j < input_size; j++) {
+            printf("%f ", inter_input[j]);
+        }
+        printf("\n");
         gru_layer_forward(&model->gru_layers[i], inter_input, h_prev + i * hidden_size);
         memcpy(h_prev + i * hidden_size, model->gru_layers[i].state.hidden_state_buffer, model->gru_layers->config.hidden_size * sizeof(float));
         inter_input = model->gru_layers[i].state.hidden_state_buffer; // inter_input points to hidden_state_buffer
@@ -179,7 +204,7 @@ int main() {
     printf("\n");
 
     // Free resources
-    free(input);
+    //free(input);
     free(h_prev);
     free(output);
     // Do not free inter_input as it points to memory managed by the model
