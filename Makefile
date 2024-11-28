@@ -25,10 +25,9 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 $(MAIN_OBJ): $(MAIN_SRC) | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-
 # Rule to link the executable
 all: $(MAIN_OBJ) $(LIB_OBJ)
-	$(CC) -o main $(MAIN_OBJ) $(LIB_OBJ) -lm  # Link all object files into the final executable
+	$(CC) -o main $(MAIN_OBJ) $(LIB_OBJ) -lm 
 
 run: all
 	./main

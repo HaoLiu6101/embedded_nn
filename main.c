@@ -6,6 +6,7 @@
 #include <sys/mman.h>
 #include "gru.h"
 #include "linear.h"
+#include "util.h"
 
 typedef struct {
     int input_size;
@@ -164,6 +165,8 @@ int main() {
 
     read_checkpoint("GRUModel_5_64_1_para.bin", &data, &file_size, model);
 
+
+
     // Example input
     float* input = (float*)calloc(input_size, sizeof(float)); // Adjust the size according to input_size
     for (int i = 0; i < input_size; i++) {
@@ -176,6 +179,15 @@ int main() {
     float* output = (float*)calloc(output_size, sizeof(float)); // Adjust the size according to output_size
     float* inter_input = NULL; // Initialize inter_input to NULL
 
+
+    // input scaling
+    float* in_mean = (float[]){1.62f, 22.25f, 3.83f, 3.90f, 3.91f,
+                                3.8886f, 40.52f, 45.20f, 35.51f, 11.53f,
+                                25.10f, 29.79f, 99.71f, 2.086f, 13.39f}; 
+    float* in_std = (float[]){0.39f, 1.53f, 7.27f, 1.43f, 0.63f,
+                                0.68f, 8.35f, 148.63f, 127.37f, 7.53f,
+                                3.23f, 4.32f, 3.85f, 14.11f, 27.65f}; 
+    standard_scaler(inter_input, input, input_size, in_mean, in_std);
 
     printf("Running forward pass through GRU layers...\n");
     for (int i = 0; i < num_layers; i++) {
