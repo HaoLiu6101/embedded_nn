@@ -156,13 +156,15 @@ int main() {
     int output_size = 4;
     int num_layers = 5;
 
-    float* data;
-    size_t file_size;
 
     GRUModelConfig model_config = {input_size, hidden_size, output_size, num_layers};
     GRUModel* model = (GRUModel*)malloc(sizeof(GRUModel));
     init_gru_model(model, model_config);
 
+    
+    // map the weights from the binary file
+    float* data;
+    size_t file_size;
     read_checkpoint("GRUModel_5_64_1_para.bin", &data, &file_size, model);
 
 
@@ -219,11 +221,10 @@ int main() {
     //free(input);
     free(h_prev);
     free(output);
-    // Do not free inter_input as it points to memory managed by the model
-
-    munmap(data, file_size);
     free_gru_model(model, false); // Free the model and its internal memory
     free(model); // Free the model itself
+
+    munmap(data, file_size);
 
     printf("Main finished.\n");
     return 0;
