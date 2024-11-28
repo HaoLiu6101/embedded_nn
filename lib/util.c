@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <math_nn.h>
+#include "math_nn.h"
 
 MathStatus standard_scaler(float* out, float* in, int size, float mean, float std) {
     // Validate input pointers
