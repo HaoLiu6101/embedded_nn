@@ -167,7 +167,7 @@ int main() {
     // Example input
     float* input = (float*)calloc(input_size, sizeof(float)); // Adjust the size according to input_size
     for (int i = 0; i < input_size; i++) {
-        input[i] = 0.4f; // Initialize to 1
+        input[i] = 0.3f; // Initialize to 1
     }
     float* h_prev = (float*)malloc(num_layers * hidden_size * sizeof(float)); // Allocate 3 * 64 floats
     for (int i = 0; i < num_layers * hidden_size; i++) {

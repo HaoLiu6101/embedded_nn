@@ -1,8 +1,8 @@
-#include "math_nn.h"
 #include <math.h>
 #include <stddef.h> // for NULL
 #include <float.h>  // for FLT_MAX
 #include <limits.h> // for FLT_MAX
+#include "math_nn.h"
 
 
 // implement the sigmoid activation function
