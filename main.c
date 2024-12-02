@@ -3,10 +3,15 @@
 #include <string.h>
 #include <fcntl.h>
 #include <stdbool.h>
-#include <sys/mman.h>
+
 #include "gru.h"
 #include "linear.h"
 #include "util.h"
+#if defined _WIN32
+    #include "win.h"
+#else
+    #include <sys/mman.h>
+#endif
 
 typedef struct {
     int input_size;
