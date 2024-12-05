@@ -91,8 +91,8 @@ void lstm_layer_forward(LSTMLayer* layer, float* input, float* h_prev, float* c_
     LSTMLayerRunState* state = &layer->state;
 
     // get the input and hidden size
-    int input_size = layer->config.input_size;
-    int hidden_size = layer->config.hidden_size;
+    int input_size = config->input_size;
+    int hidden_size = config->hidden_size;
 
     // get the run state buffers
     float* input_buffer = state->input_buffer;
@@ -140,28 +140,29 @@ void lstm_layer_forward(LSTMLayer* layer, float* input, float* h_prev, float* c_
     add(forget_gate_buffer, forget_gate_buffer, b_hf, hidden_size);
     sigmoid_act_vec(forget_gate_buffer, forget_gate_buffer, hidden_size);
 
-    // Compute cell gate: g_t = tanh(W_ig * x_t + W_hg * h_prev + b_ig + b_hg)
-    matmul(layer->state.input_buffer, layer->weights.W_ig, input, hidden_size, input_size, 1);
-    matmul(layer->state.hidden_state_buffer, layer->weights.W_hg, h_prev, hidden_size, hidden_size, 1);
-    add(layer->state.input_buffer, layer->state.input_buffer, layer->state.hidden_state_buffer, hidden_size);
-    add(layer->state.input_buffer, layer->state.input_buffer, layer->weights.b_ig, hidden_size);
-    add(layer->state.input_buffer, layer->state.input_buffer, layer->weights.b_hg, hidden_size);
-    tanh_act_vec(layer->input_buffer, layer->state.input_buffer, hidden_size);
+    // Compute input node: g_t = tanh(W_ig * x_t + W_hg * h_prev + b_ig + b_hg)
+    matmul(input_node_buffer, W_ig, input_buffer, 1, input_size, hidden_size);
+    matmul(hidden_state_buffer, W_hg, h_prev, 1, hidden_size, hidden_size);
+    add(input_node_buffer, input_node_buffer, hidden_state_buffer, hidden_size);
+    add(input_node_buffer, input_node_buffer, b_ig, hidden_size);
+    add(input_node_buffer, input_node_buffer, b_hg, hidden_size);
+    tanh_act_vec(input_node_buffer, input_node_buffer, hidden_size);
 
     // Compute output gate: o_t = sigmoid(W_io * x_t + W_ho * h_prev + b_io + b_ho)
-    matmul(layer->state.output_gate_buffer, layer->weights.W_io, input, hidden_size, input_size, 1);
-    matmul(layer->state.hidden_state_buffer, layer->weights.W_ho, h_prev, hidden_size, hidden_size, 1);
-    add(layer->state.output_gate_buffer, layer->state.output_gate_buffer, layer->state.hidden_state_buffer, hidden_size);
-    add(layer->state.output_gate_buffer, layer->state.output_gate_buffer, layer->weights.b_io, hidden_size);
-    add(layer->state.output_gate_buffer, layer->state.output_gate_buffer, layer->weights.b_ho, hidden_size);
-    sigmoid_act_vec(layer->output_gate_buffer, layer->state.output_gate_buffer, hidden_size);
+    matmul(output_gate_buffer, W_io, input_buffer, 1, input_size, hidden_size);
+    matmul(hidden_state_buffer, W_ho, h_prev, 1, hidden_size, hidden_size);
+    add(output_gate_buffer, output_gate_buffer, hidden_state_buffer, hidden_size);
+    add(output_gate_buffer, output_gate_buffer, b_io, hidden_size);
+    add(output_gate_buffer, output_gate_buffer, b_ho, hidden_size);
+    sigmoid_act_vec(output_gate_buffer, output_gate_buffer, hidden_size);
+
 
     // Update cell state: c_t = f_t * c_prev + i_t * g_t
-    mul(layer->state.cell_state_buffer, layer->forget_gate_buffer, layer->state.cell_state_buffer, hidden_size);
-    mul(layer->input_buffer, layer->input_gate_buffer, layer->input_buffer, hidden_size);
-    add(layer->state.cell_state_buffer, layer->state.cell_state_buffer, layer->input_buffer, hidden_size);
+    mul(cell_state_buffer, forget_gate_buffer, c_prev, hidden_size);
+    mul(input_node_buffer, input_gate_buffer, input_node_buffer, hidden_size);
+    add(cell_state_buffer, cell_state_buffer, input_node_buffer, hidden_size);
 
     // Update hidden state: h_t = o_t * tanh(c_t)
-    tanh_act_vec(layer->hidden_state_buffer, layer->state.cell_state_buffer, hidden_size);
-    mul(h_prev, layer->output_gate_buffer, layer->hidden_state_buffer, hidden_size);
+    tanh_act_vec(cell_state_buffer, cell_state_buffer, hidden_size);
+    mul(hidden_state_buffer, output_gate_buffer, cell_state_buffer, hidden_size);
 }

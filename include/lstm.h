@@ -8,22 +8,22 @@ typedef struct {
 
 
 typedef struct {
-    float* W_ii;
-    float* W_if;
-    float* W_ig;
-    float* W_io;
-    float* W_hi;
-    float* W_hf;
-    float* W_hg;
-    float* W_ho;
-    float* b_ii;
-    float* b_if;
-    float* b_ig;
-    float* b_io;
-    float* b_hi;
-    float* b_hf;
-    float* b_hg;
-    float* b_ho;
+    float* W_ii;    //input to hidden weights 
+    float* W_if;    //forget to hidden weights
+    float* W_ig;    //input node or cell to hidden gate 
+    float* W_io;    //output to hidden gate
+    float* W_hi;    //hidden to hidden gate
+    float* W_hf;    //forget to hidden gate 
+    float* W_hg;    //cell to hidden gate
+    float* W_ho;    //output to hidden gate
+    float* b_ii;    //bias for input gate
+    float* b_if;    //bias for forget gate
+    float* b_ig;    //bias for cell gate
+    float* b_io;    //bias for output gate
+    float* b_hi;    //bias for hidden input gate 
+    float* b_hf;    //bias for hidden forget gate
+    float* b_hg;    //bias for hidden cell gate
+    float* b_ho;    //bias for hidden output gate
 } LSTMLayerWeights;
 
 
@@ -52,6 +52,6 @@ void init_lstm_layer(LSTMLayer* layer, int input_size, int hidden_size);
 void free_lstm_layer_weights(LSTMLayerWeights* weights);
 void free_lstm_layer_run_state(LSTMLayerRunState* state);
 void free_lstm_layer(LSTMLayer* layer, bool free_weights);
-void lstm_layer_forward(LSTMLayer* layer, float* input, float* h_prev);
+void lstm_layer_forward(LSTMLayer* layer, float* input, float* h_prev, float* c_prev);
 
 #endif // LSTM_H
