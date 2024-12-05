@@ -32,6 +32,7 @@ typedef struct {
     float* forget_gate_buffer;
     float* input_gate_buffer;
     float* output_gate_buffer;
+    float* input_node_buffer; // New buffer
     float* cell_state_buffer;
     float* hidden_state_buffer;
 } LSTMLayerRunState;

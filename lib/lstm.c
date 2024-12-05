@@ -4,7 +4,6 @@
 #include <stdbool.h> // Include the stdbool.h header for bool type
 #include "lstm.h"
 #include "math_nn.h"
-// ...existing code...
 
 void init_lstm_layer_config(LSTMLayerConfig* config, int input_size, int hidden_size) {
     config->input_size = input_size;
@@ -37,6 +36,7 @@ void init_lstm_layer_run_state(LSTMLayerRunState* state, LSTMLayerConfig* config
     state->forget_gate_buffer = (float*)malloc(hidden_size * sizeof(float));
     state->input_gate_buffer = (float*)malloc(hidden_size * sizeof(float));
     state->output_gate_buffer = (float*)malloc(hidden_size * sizeof(float));
+    state->input_node_buffer = (float*)malloc(config->input_size * sizeof(float)); // New buffer
     state->cell_state_buffer = (float*)malloc(hidden_size * sizeof(float));
     state->hidden_state_buffer = (float*)malloc(hidden_size * sizeof(float));
 }
@@ -71,6 +71,7 @@ void free_lstm_layer_run_state(LSTMLayerRunState* state) {
     free(state->forget_gate_buffer);
     free(state->input_gate_buffer);
     free(state->output_gate_buffer);
+    free(state->input_node_buffer); // Free new buffer
     free(state->cell_state_buffer);
     free(state->hidden_state_buffer);
 }
@@ -83,25 +84,61 @@ void free_lstm_layer(LSTMLayer* layer, bool free_weights) {
 
 }
 
-void lstm_layer_forward(LSTMLayer* layer, float* input, float* h_prev) {
+void lstm_layer_forward(LSTMLayer* layer, float* input, float* h_prev, float* c_prev) {
+    // get the config, weights and state
+    LSTMLayerConfig* config = &layer->config;
+    LSTMLayerWeights* weights = &layer->weights;
+    LSTMLayerRunState* state = &layer->state;
+
+    // get the input and hidden size
     int input_size = layer->config.input_size;
     int hidden_size = layer->config.hidden_size;
 
+    // get the run state buffers
+    float* input_buffer = state->input_buffer;
+    float* forget_gate_buffer = state->forget_gate_buffer;
+    float* input_gate_buffer = state->input_gate_buffer;
+    float* output_gate_buffer = state->output_gate_buffer;
+    float* input_node_buffer = state->input_node_buffer; // New buffer
+    float* cell_state_buffer = state->cell_state_buffer;
+    float* hidden_state_buffer = state->hidden_state_buffer;
+
+    // map input into input buffer
+    memcpy(input_buffer, input, input_size * sizeof(float));
+    // get the weights and the bias 
+    float* W_ii = weights->W_ii;
+    float* W_if = weights->W_if;
+    float* W_ig = weights->W_ig;
+    float* W_io = weights->W_io;
+    float* W_hi = weights->W_hi;
+    float* W_hf = weights->W_hf;
+    float* W_hg = weights->W_hg;
+    float* W_ho = weights->W_ho;
+    float* b_ii = weights->b_ii;
+    float* b_if = weights->b_if;
+    float* b_ig = weights->b_ig;
+    float* b_io = weights->b_io;
+    float* b_hi = weights->b_hi;
+    float* b_hf = weights->b_hf;
+    float* b_hg = weights->b_hg;
+    float* b_ho = weights->b_ho;
+
+
     // Compute input gate: i_t = sigmoid(W_ii * x_t + W_hi * h_prev + b_ii + b_hi)
-    matmul(layer->state.input_buffer, layer->weights.W_ii, input, hidden_size, input_size, 1);
-    matmul(layer->state.hidden_state_buffer, layer->weights.W_hi, h_prev, hidden_size, hidden_size, 1);
-    add(layer->state.input_buffer, layer->state.input_buffer, layer->state.hidden_state_buffer, hidden_size);
-    add(layer->state.input_buffer, layer->state.input_buffer, layer->weights.b_ii, hidden_size);
-    add(layer->state.input_buffer, layer->state.input_buffer, layer->weights.b_hi, hidden_size);
-    sigmoid_act_vec(layer->input_gate_buffer, layer->state.input_buffer, hidden_size);
+    matmul(input_gate_buffer, W_ii, input_buffer, 1, input_size, hidden_size);
+    matmul(hidden_state_buffer, W_hi, h_prev, 1, hidden_size, hidden_size);
+    add(input_gate_buffer, input_gate_buffer, hidden_state_buffer, hidden_size);
+    add(input_gate_buffer, input_gate_buffer, b_ii, hidden_size);
+    add(input_gate_buffer, input_gate_buffer, b_hi, hidden_size);
+    sigmoid_act_vec(input_gate_buffer, input_gate_buffer, hidden_size);
 
     // Compute forget gate: f_t = sigmoid(W_if * x_t + W_hf * h_prev + b_if + b_hf)
-    matmul(layer->state.forget_gate_buffer, layer->weights.W_if, input, hidden_size, input_size, 1);
-    matmul(layer->state.hidden_state_buffer, layer->weights.W_hf, h_prev, hidden_size, hidden_size, 1);
-    add(layer->state.forget_gate_buffer, layer->state.forget_gate_buffer, layer->state.hidden_state_buffer, hidden_size);
-    add(layer->state.forget_gate_buffer, layer->state.forget_gate_buffer, layer->weights.b_if, hidden_size);
-    add(layer->state.forget_gate_buffer, layer->state.forget_gate_buffer, layer->weights.b_hf, hidden_size);
-    sigmoid_act_vec(layer->forget_gate_buffer, layer->state.forget_gate_buffer, hidden_size);
+    matmul(forget_gate_buffer, W_if, input_buffer, 1, input_size, hidden_size);
+    matmul(hidden_state_buffer, W_hf, h_prev, 1, hidden_size, hidden_size);
+    add(forget_gate_buffer, forget_gate_buffer, hidden_state_buffer, hidden_size);
+    add(forget_gate_buffer, forget_gate_buffer, b_if, hidden_size);
+    add(forget_gate_buffer, forget_gate_buffer, b_hf, hidden_size);
+    sigmoid_act_vec(forget_gate_buffer, forget_gate_buffer, hidden_size);
 
     // Compute cell gate: g_t = tanh(W_ig * x_t + W_hg * h_prev + b_ig + b_hg)
     matmul(layer->state.input_buffer, layer->weights.W_ig, input, hidden_size, input_size, 1);
