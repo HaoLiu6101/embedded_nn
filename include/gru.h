@@ -3,6 +3,7 @@
 #define GRU_H
 
 typedef struct {
+    int input_dim;
     int input_size;
     int hidden_size;
 } GRULayerConfig;
@@ -25,7 +26,6 @@ typedef struct {
 typedef struct {
     float* hidden_state_buffer;
     float* input_buffer;
-    float* output_buffer;
     float* reset_gate_buffer;
     float* update_gate_buffer;
     float* candidate_hidden_state_buffer;
@@ -38,7 +38,7 @@ typedef struct {
     GRULayerRunState state;
 } GRULayer;
 
-void init_gru_layer_config(GRULayerConfig* config, int input_size, int hidden_size);
+void init_gru_layer_config(GRULayerConfig* config, int input_dim, int input_size, int hidden_size);
 void init_gru_layer_weights(GRULayerWeights* weights, GRULayerConfig* config);
 void init_gru_layer_run_state(GRULayerRunState* state, GRULayerConfig* config);
 void init_gru_layer(GRULayer* layer, int input_size, int hidden_size);

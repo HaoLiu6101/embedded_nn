@@ -6,7 +6,8 @@
 #include "math_nn.h"
 
 // Initialization functions
-void init_gru_layer_config(GRULayerConfig* config, int input_size, int hidden_size) {
+void init_gru_layer_config(GRULayerConfig* config, int input_dim, int input_size, int hidden_size) {
+    config->input_dim = input_dim;
     config->input_size = input_size;
     config->hidden_size = hidden_size;
 }
@@ -30,16 +31,16 @@ void init_gru_layer_weights(GRULayerWeights* weights, GRULayerConfig* config) {
 }
 
 void init_gru_layer_run_state(GRULayerRunState* state, GRULayerConfig* config) {
+    int input_dim = config->input_dim;
     int hidden_size = config->hidden_size;
     int input_size = config->input_size;
 
-    state->hidden_state_buffer = (float*)calloc(hidden_size, sizeof(float));
-    state->input_buffer = (float*)calloc(input_size, sizeof(float));
-    state->output_buffer = (float*)calloc(hidden_size, sizeof(float));
-    state->reset_gate_buffer = (float*)calloc(hidden_size, sizeof(float));
-    state->update_gate_buffer = (float*)calloc(hidden_size, sizeof(float));
-    state->candidate_hidden_state_buffer = (float*)calloc(hidden_size, sizeof(float));
-    state->hidden_cell_temp = (float*)calloc(hidden_size, sizeof(float));
+    state->hidden_state_buffer = (float*)calloc(input_dim * hidden_size, sizeof(float));
+    state->input_buffer = (float*)calloc(input_dim * input_size, sizeof(float));
+    state->reset_gate_buffer = (float*)calloc(input_dim * hidden_size, sizeof(float));
+    state->update_gate_buffer = (float*)calloc(input_dim * hidden_size, sizeof(float));
+    state->candidate_hidden_state_buffer = (float*)calloc(input_dim * hidden_size, sizeof(float));
+    state->hidden_cell_temp = (float*)calloc(input_dim * hidden_size, sizeof(float));
 }
 
 void init_gru_layer(GRULayer* layer, int input_size, int hidden_size) {
@@ -66,7 +67,6 @@ void free_gru_layer_weights(GRULayerWeights* weights) {
 void free_gru_layer_run_state(GRULayerRunState* state) {
     free(state->hidden_state_buffer);
     free(state->input_buffer);
-    free(state->output_buffer);
     free(state->reset_gate_buffer);
     free(state->update_gate_buffer);
     free(state->candidate_hidden_state_buffer);
@@ -88,6 +88,7 @@ void gru_layer_forward(GRULayer* layer, float* input, float* h_prev) {
     GRULayerWeights* weights = &layer->weights;
     GRULayerRunState* state = &layer->state;
 
+    int input_dim = config->input_dim;
     int input_size = config->input_size;
     int hidden_size = config->hidden_size;
 
@@ -114,33 +115,34 @@ void gru_layer_forward(GRULayer* layer, float* input, float* h_prev) {
     float* b_hn = weights->b_hn;
     
 
-    matmul(reset_gate_buffer, input_buffer, W_ir, 1, input_size, hidden_size);
-    add(reset_gate_buffer, reset_gate_buffer, b_ir, hidden_size);
-    matmul(reset_gate_buffer, h_prev, W_hr, 1, hidden_size, hidden_size);
-    add(reset_gate_buffer, reset_gate_buffer, b_hr, hidden_size);
-    sigmoid_act_vec(reset_gate_buffer, reset_gate_buffer, hidden_size);
+    matmul(reset_gate_buffer, input_buffer, W_ir, input_dim, input_size, hidden_size);
+    add(reset_gate_buffer, reset_gate_buffer, b_ir, input_dim * hidden_size);
+    matmul(reset_gate_buffer, h_prev, W_hr, input_dim, hidden_size, hidden_size);
+    add(reset_gate_buffer, reset_gate_buffer, b_hr, input_dim * hidden_size);
+    sigmoid_act_vec(reset_gate_buffer, reset_gate_buffer, input_dim * hidden_size);
 
-    matmul(update_gate_buffer, input_buffer, W_iz, 1, input_size, hidden_size);
-    add(update_gate_buffer, update_gate_buffer, b_iz, hidden_size);
-    matmul(update_gate_buffer, h_prev, W_hz, 1, hidden_size, hidden_size);
-    add(update_gate_buffer, update_gate_buffer, b_hz, hidden_size);
-    sigmoid_act_vec(update_gate_buffer, update_gate_buffer, hidden_size);
+    matmul(update_gate_buffer, input_buffer, W_iz, input_dim, input_size, hidden_size);
+    add(update_gate_buffer, update_gate_buffer, b_iz, input_dim * hidden_size);
+    matmul(update_gate_buffer, h_prev, W_hz, input_dim, hidden_size, hidden_size);
+    add(update_gate_buffer, update_gate_buffer, b_hz, input_dim * hidden_size);
+    sigmoid_act_vec(update_gate_buffer, update_gate_buffer, input_dim * hidden_size);
 
-    matmul(candidate_hidden_state_buffer, input_buffer, W_in, 1, input_size, hidden_size);
-    add(candidate_hidden_state_buffer, candidate_hidden_state_buffer, b_in, hidden_size);
+    matmul(candidate_hidden_state_buffer, input_buffer, W_in, input_dim, input_size, hidden_size);
+    add(candidate_hidden_state_buffer, candidate_hidden_state_buffer, b_in, input_dim * hidden_size);
 
-    float r_h_prev[hidden_size];
-    for (int i = 0; i < hidden_size; i++) {
-        r_h_prev[i] = reset_gate_buffer[i] * h_prev[i];
-    }
+    float r_h_prev[input_dim * hidden_size];
+    // for (int i = 0; i < input_dim * hidden_size; i++) {
+    //     r_h_prev[i] = reset_gate_buffer[i] * h_prev[i];
+    // }
+    mul(r_h_prev, reset_gate_buffer, h_prev, input_dim * hidden_size);
 
-    matmul(candidate_hidden_state_buffer, r_h_prev, W_hn, 1, hidden_size, hidden_size);
-    add(candidate_hidden_state_buffer, candidate_hidden_state_buffer, b_hn, hidden_size);
-    tanh_act_vec(candidate_hidden_state_buffer, candidate_hidden_state_buffer, hidden_size);
+    matmul(candidate_hidden_state_buffer, r_h_prev, W_hn, input_dim, hidden_size, hidden_size);
+    add(candidate_hidden_state_buffer, candidate_hidden_state_buffer, b_hn, input_dim * hidden_size);
+    tanh_act_vec(candidate_hidden_state_buffer, candidate_hidden_state_buffer, input_dim * hidden_size);
 
-    for (int i = 0; i < hidden_size; i++) {
+    for (int i = 0; i < input_dim * hidden_size; i++) {
         hidden_cell_temp[i] = update_gate_buffer[i] * h_prev[i] + (1 - update_gate_buffer[i]) * candidate_hidden_state_buffer[i];
     }
 
-    memcpy(hidden_state_buffer, hidden_cell_temp, hidden_size * sizeof(float));
+    memcpy(hidden_state_buffer, hidden_cell_temp, input_dim * hidden_size * sizeof(float));
 }
