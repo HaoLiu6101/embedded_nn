@@ -43,8 +43,8 @@ void init_gru_layer_run_state(GRULayerRunState* state, GRULayerConfig* config) {
     state->hidden_cell_temp = (float*)calloc(input_dim * hidden_size, sizeof(float));
 }
 
-void init_gru_layer(GRULayer* layer, int input_size, int hidden_size) {
-    init_gru_layer_config(&layer->config, input_size, hidden_size);
+void init_gru_layer(GRULayer* layer, int input_dim, int input_size, int hidden_size) {
+    init_gru_layer_config(&layer->config, input_dim, input_size, hidden_size);
     init_gru_layer_weights(&layer->weights, &layer->config);
     init_gru_layer_run_state(&layer->state, &layer->config);
 }
@@ -99,7 +99,7 @@ void gru_layer_forward(GRULayer* layer, float* input, float* h_prev) {
     float* candidate_hidden_state_buffer = state->candidate_hidden_state_buffer;
     float* hidden_cell_temp = state->hidden_cell_temp;
 
-    memcpy(input_buffer, input, input_size * sizeof(float));
+    memcpy(input_buffer, input, input_dim * input_size * sizeof(float));
 
     float* W_ir = weights->W_ir;
     float* W_iz = weights->W_iz;

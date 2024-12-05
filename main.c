@@ -14,6 +14,7 @@
 #endif
 
 typedef struct {
+    int input_dim;
     int input_size;
     int hidden_size;
     int output_size;
@@ -27,16 +28,16 @@ typedef struct {
 } GRUModel;
 
 void init_gru_model(GRUModel* model, GRUModelConfig config) {
-    model->config = config;
-    printf("Initializing GRU model...\n");
+    model->config = config;    printf("Initializing GRU model...\n");
     //allocate memory for GRU layers
     model->gru_layers = (GRULayer*)malloc(model->config.num_layers * sizeof(GRULayer));
+    int input_dim = model->config.input_dim;
     int input_size = model->config.input_size;
     for (int i = 0; i < model->config.num_layers; i++) {
-        init_gru_layer(&model->gru_layers[i], input_size, model->config.hidden_size);
+        init_gru_layer(&model->gru_layers[i], input_dim, input_size, model->config.hidden_size);
         input_size = model->config.hidden_size;
     }
-    init_linear_layer(&model->output_layer, model->config.hidden_size, model->config.output_size);
+    init_linear_layer(&model->output_layer, input_dim * model->config.hidden_size, model->config.output_size); // the linear layer requires a flattening beforehand
     printf("GRU model initialized.\n");
 }
 
@@ -156,13 +157,14 @@ void read_checkpoint(char *checkpoint, float **data, size_t *file_size, GRUModel
 int main() { 
     printf("Starting main...\n");
     // Initialize GRU model
+    int input_dim = 1;
     int input_size = 15;
     int hidden_size = 64;
     int output_size = 4;
     int num_layers = 5;
 
 
-    GRUModelConfig model_config = {input_size, hidden_size, output_size, num_layers};
+    GRUModelConfig model_config = {input_dim, input_size, hidden_size, output_size, num_layers};
     GRUModel* model = (GRUModel*)malloc(sizeof(GRUModel));
     init_gru_model(model, model_config);
 
@@ -175,15 +177,15 @@ int main() {
 
 
     // Example input
-    float* input = (float*)calloc(input_size, sizeof(float)); // Adjust the size according to input_size
-    for (int i = 0; i < input_size; i++) {
+    float* input = (float*)calloc(input_dim * input_size, sizeof(float)); // Adjust the size according to input_size
+    for (int i = 0; i < input_dim * input_size; i++) {
         input[i] = 0.3f; // Initialize to 1
     }
-    float* h_prev = (float*)malloc(num_layers * hidden_size * sizeof(float)); // Allocate 3 * 64 floats
-    for (int i = 0; i < num_layers * hidden_size; i++) {
+    float* h_prev = (float*)malloc( num_layers * input_dim * hidden_size * sizeof(float)); // Allocate 3 * 64 floats
+    for (int i = 0; i < num_layers * input_dim * hidden_size; i++) {
         h_prev[i] = 0.5f; // Initialize to 1
     }
-    float* output = (float*)calloc(output_size, sizeof(float)); // Adjust the size according to output_size
+    float* output = (float*)calloc(input_dim * output_size, sizeof(float)); // Adjust the size according to output_size
     float* inter_input = NULL; // Initialize inter_input to NULL
 
 
@@ -203,7 +205,7 @@ int main() {
         }
         //print out the input 
         printf("Input: ");
-        for (int j = 0; j < input_size; j++) {
+        for (int j = 0; j < input_dim * input_size; j++) {
             printf("%f ", inter_input[j]);
         }
         printf("\n");
