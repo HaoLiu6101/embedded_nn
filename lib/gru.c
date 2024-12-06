@@ -13,6 +13,7 @@ void init_gru_layer_config(GRULayerConfig* config, int input_dim, int input_size
 }
 
 void init_gru_layer_weights(GRULayerWeights* weights, GRULayerConfig* config) {
+    int input_dim = config->input_dim;
     int input_size = config->input_size;
     int hidden_size = config->hidden_size;
 
@@ -22,12 +23,12 @@ void init_gru_layer_weights(GRULayerWeights* weights, GRULayerConfig* config) {
     weights->W_hr = (float*)calloc(hidden_size * hidden_size, sizeof(float));
     weights->W_hz = (float*)calloc(hidden_size * hidden_size, sizeof(float));
     weights->W_hn = (float*)calloc(hidden_size * hidden_size, sizeof(float));
-    weights->b_ir = (float*)calloc(hidden_size, sizeof(float));
-    weights->b_iz = (float*)calloc(hidden_size, sizeof(float));
-    weights->b_in = (float*)calloc(hidden_size, sizeof(float));
-    weights->b_hr = (float*)calloc(hidden_size, sizeof(float));
-    weights->b_hz = (float*)calloc(hidden_size, sizeof(float));
-    weights->b_hn = (float*)calloc(hidden_size, sizeof(float));
+    weights->b_ir = (float*)calloc(input_dim * hidden_size, sizeof(float));
+    weights->b_iz = (float*)calloc(input_dim * hidden_size, sizeof(float));
+    weights->b_in = (float*)calloc(input_dim * hidden_size, sizeof(float));
+    weights->b_hr = (float*)calloc(input_dim * hidden_size, sizeof(float));
+    weights->b_hz = (float*)calloc(input_dim * hidden_size, sizeof(float));
+    weights->b_hn = (float*)calloc(input_dim * hidden_size, sizeof(float));
 }
 
 void init_gru_layer_run_state(GRULayerRunState* state, GRULayerConfig* config) {
@@ -141,8 +142,9 @@ void gru_layer_forward(GRULayer* layer, float* input, float* h_prev) {
     tanh_act_vec(candidate_hidden_state_buffer, candidate_hidden_state_buffer, input_dim * hidden_size);
 
     for (int i = 0; i < input_dim * hidden_size; i++) {
-        hidden_cell_temp[i] = update_gate_buffer[i] * h_prev[i] + (1 - update_gate_buffer[i]) * candidate_hidden_state_buffer[i];
+        hidden_state_buffer[i] = update_gate_buffer[i] * h_prev[i] + (1 - update_gate_buffer[i]) * candidate_hidden_state_buffer[i];
     }
 
-    memcpy(hidden_state_buffer, hidden_cell_temp, input_dim * hidden_size * sizeof(float));
+    //below is removed for memory efficiency 
+    //memcpy(hidden_state_buffer, hidden_cell_temp, input_dim * hidden_size * sizeof(float));
 }
