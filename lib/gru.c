@@ -41,7 +41,7 @@ void init_gru_layer_run_state(GRULayerRunState* state, GRULayerConfig* config) {
     state->reset_gate_buffer = (float*)calloc(input_dim * hidden_size, sizeof(float));
     state->update_gate_buffer = (float*)calloc(input_dim * hidden_size, sizeof(float));
     state->candidate_hidden_state_buffer = (float*)calloc(input_dim * hidden_size, sizeof(float));
-    state->hidden_cell_temp = (float*)calloc(input_dim * hidden_size, sizeof(float));
+    // Removed allocation of hidden_cell_temp
 }
 
 void init_gru_layer(GRULayer* layer, int input_dim, int input_size, int hidden_size) {
@@ -71,7 +71,7 @@ void free_gru_layer_run_state(GRULayerRunState* state) {
     free(state->reset_gate_buffer);
     free(state->update_gate_buffer);
     free(state->candidate_hidden_state_buffer);
-    free(state->hidden_cell_temp);
+    // Removed freeing of hidden_cell_temp
 }
 
 void free_gru_layer(GRULayer* layer, bool free_weights) {
@@ -98,7 +98,7 @@ void gru_layer_forward(GRULayer* layer, float* input, float* h_prev) {
     float* reset_gate_buffer = state->reset_gate_buffer;
     float* update_gate_buffer = state->update_gate_buffer;
     float* candidate_hidden_state_buffer = state->candidate_hidden_state_buffer;
-    float* hidden_cell_temp = state->hidden_cell_temp;
+    // Removed declaration of hidden_cell_temp
 
     memcpy(input_buffer, input, input_dim * input_size * sizeof(float));
 

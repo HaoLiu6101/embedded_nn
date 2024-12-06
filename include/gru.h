@@ -1,4 +1,3 @@
-
 #ifndef GRU_H
 #define GRU_H
 
@@ -29,7 +28,6 @@ typedef struct {
     float* reset_gate_buffer;
     float* update_gate_buffer;
     float* candidate_hidden_state_buffer;
-    float* hidden_cell_temp;
 } GRULayerRunState;
 
 typedef struct {
