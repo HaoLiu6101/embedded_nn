@@ -5,7 +5,8 @@
 #include "lstm.h"
 #include "math_nn.h"
 
-void init_lstm_layer_config(LSTMLayerConfig* config, int input_size, int hidden_size) {
+void init_lstm_layer_config(LSTMLayerConfig* config, int input_dim, int input_size, int hidden_size) {
+    config->input_dim = input_dim;
     config->input_size = input_size;
     config->hidden_size = hidden_size;
 }
