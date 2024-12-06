@@ -2,6 +2,7 @@
 #define LSTM_H
 
 typedef struct {
+    int input_dim;
     int input_size;
     int hidden_size;
 } LSTMLayerConfig;
@@ -45,10 +46,10 @@ typedef struct {
 } LSTMLayer;
 
 
-void init_lstm_layer_config(LSTMLayerConfig* config, int input_size, int hidden_size);
+void init_lstm_layer_config(LSTMLayerConfig* config, int input_dim, int input_size, int hidden_size);
 void init_lstm_layer_weights(LSTMLayerWeights* weights, LSTMLayerConfig* config);
 void init_lstm_layer_run_state(LSTMLayerRunState* state, LSTMLayerConfig* config);
-void init_lstm_layer(LSTMLayer* layer, int input_size, int hidden_size);
+void init_lstm_layer(LSTMLayer* layer, int input_dim, int input_size, int hidden_size);
 void free_lstm_layer_weights(LSTMLayerWeights* weights);
 void free_lstm_layer_run_state(LSTMLayerRunState* state);
 void free_lstm_layer(LSTMLayer* layer, bool free_weights);
