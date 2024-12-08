@@ -1,4 +1,3 @@
-
 #ifndef MATH_NN_H
 #define MATH_NN_H
 
@@ -11,6 +10,7 @@ typedef enum {
     MATH_INVALID_DIM = -2,
     MATH_OVERFLOW_RISK = -3,
     MATH_EXCEEDS_MAX_DIM = -4,
+    MATH_INVALID_RANGE = -5,
 } MathStatus;
 
 // Function to compute the sigmoid activation
