@@ -33,7 +33,7 @@ run: all
 	./main
 
 clean:
-	rm -rf $(OBJ_DIR) main
+	rm -rf $(OBJ_DIR) main lstm_3layer
 
 
 
@@ -47,3 +47,6 @@ clean:
 # test: $(TEST_OBJ)
 # 	$(CC) $(CFLAGS) -o test_math_nn $(TEST_OBJ) -lm
 # 	./test_math_nn
+
+lstm_3layer: lstm_3layer.c $(LIB_SRC)
+	$(CC) $(CFLAGS) -o lstm_3layer lstm_3layer.c $(LIB_SRC) -lm
