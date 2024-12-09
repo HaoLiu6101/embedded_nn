@@ -97,3 +97,61 @@ MathStatus tanh_act_vec(float* out, float* x, int size) {
     }
     return MATH_SUCCESS;
 }
+
+// Function to perform RMS normalization
+MathStatus rms_norm(float* out, float* x, int size) {
+    if (out == NULL || x == NULL) {
+        return MATH_NULL_POINTER; // Check for null pointers
+    }
+    if (size <= 0 || size > MAX_DIM) {
+        return MATH_INVALID_DIM; // Check for valid dimensions
+    }
+
+    // Calculate sum of squares
+    float ss = 0.0f;
+    for (int j = 0; j < size; j++) {
+        ss += x[j] * x[j];
+    }
+    ss /= size; // Mean of squares
+    ss += 1e-5f; // Small constant for numerical stability
+    ss = 1.0f / sqrtf(ss); // Inverse of the root mean square
+
+    // Normalize and scale
+    for (int j = 0; j < size; j++) {
+        out[j] = ss * x[j]; // Scale the input by the RMS value
+    }
+
+    return MATH_SUCCESS; // Return success status
+}
+
+// Function to perform softmax
+MathStatus softmax(float* out, float* x, int size) {
+    if (out == NULL || x == NULL) {
+        return MATH_NULL_POINTER; // Check for null pointers
+    }
+    if (size <= 0 || size > MAX_DIM) {
+        return MATH_INVALID_DIM; // Check for valid dimensions
+    }
+
+    // Find max value (for numerical stability)
+    float max_val = x[0];
+    for (int i = 1; i < size; i++) {
+        if (x[i] > max_val) {
+            max_val = x[i];
+        }
+    }
+
+    // Exponential and sum
+    float sum = 0.0f;
+    for (int i = 0; i < size; i++) {
+        out[i] = expf(x[i] - max_val); // Subtract max_val for numerical stability
+        sum += out[i];
+    }
+
+    // Normalize
+    for (int i = 0; i < size; i++) {
+        out[i] /= sum; // Normalize to get probabilities
+    }
+
+    return MATH_SUCCESS; // Return success status
+}

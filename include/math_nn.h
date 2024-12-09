@@ -37,4 +37,10 @@ MathStatus sigmoid_act_vec(float* out, float* x, int size);
 // Function to perform element-wise tanh activation
 MathStatus tanh_act_vec(float* out, float* x, int size);
 
+// Function to perform RMS normalization
+MathStatus rms_norm(float* out, float* x, int size);
+
+// Function to perform softmax
+MathStatus softmax(float* out, float* x, int size);
+
 #endif // MATH_NN_H
