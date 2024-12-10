@@ -178,15 +178,17 @@ int main() {
 
     // Example input
     float* input = (float*)calloc(input_dim * input_size, sizeof(float)); // Adjust the size according to input_size
+    float* h_prev = (float*)calloc( num_layers * input_dim * hidden_size, sizeof(float)); // Allocate 3 * 64 floats
+    float* output = (float*)calloc(input_dim * output_size, sizeof(float)); // Adjust the size according to output_size
+    float* inter_input = (float*)calloc(input_dim * hidden_size, sizeof(float)); // Allocate memory for inter_input
+    
     for (int i = 0; i < input_dim * input_size; i++) {
         input[i] = 0.3f; // Initialize to 1
     }
-    float* h_prev = (float*)malloc( num_layers * input_dim * hidden_size * sizeof(float)); // Allocate 3 * 64 floats
+
     for (int i = 0; i < num_layers * input_dim * hidden_size; i++) {
         h_prev[i] = 0.5f; // Initialize to 1
     }
-    float* output = (float*)calloc(input_dim * output_size, sizeof(float)); // Adjust the size according to output_size
-    float* inter_input = NULL; // Initialize inter_input to NULL
 
 
     // input scaling
@@ -225,9 +227,10 @@ int main() {
     printf("\n");
 
     // Free resources
-    //free(input);
+    free(input);
     free(h_prev);
     free(output);
+    // free(inter_input); // Free inter_input
     free_gru_model(model, false); // Free the model and its internal memory
     free(model); // Free the model itself
 
