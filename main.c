@@ -27,6 +27,13 @@ typedef struct {
     LinearLayer output_layer;
 } GRUModel;
 
+//define a checkpoint config struct to capture checkpoint information
+typedef struct {
+    char* checkpoint;
+    size_t file_size;
+    float* data;
+} CheckpointConfig;
+
 void init_gru_model(GRUModel* model, GRUModelConfig config) {
     model->config = config;    printf("Initializing GRU model...\n");
     //allocate memory for GRU layers
@@ -122,59 +129,77 @@ void memory_map_weights(GRUModel* model, float *data_ptr) {
     printf("Weights mapped.\n");
 }
 
-void read_checkpoint(char *checkpoint, float **data, size_t *file_size, GRUModel* model) {
-    printf("Reading checkpoint from %s...\n", checkpoint);
-    FILE *file = fopen(checkpoint, "rb");
+void read_checkpoint(CheckpointConfig* checkpoint_config, GRUModel* model) {
+    printf("Reading checkpoint from %s...\n", checkpoint_config->checkpoint);
+    FILE *file = fopen(checkpoint_config->checkpoint, "rb");
     if (!file) { 
-        fprintf(stderr, "Couldn't open file %s\n", checkpoint); 
+        fprintf(stderr, "Couldn't open file %s\n", checkpoint_config->checkpoint); 
         exit(EXIT_FAILURE); 
     }
 
     // Figure out the file size
     fseek(file, 0, SEEK_END); // Move file pointer to end of file
-    *file_size = ftell(file); // Get the file size in bytes
+    checkpoint_config->file_size = ftell(file); // Get the file size in bytes
     fclose(file);
-    printf("File size: %ld bytes\n", *file_size);
+    printf("File size: %ld bytes\n", checkpoint_config->file_size);
 
     // Memory map the GRU weights into the data pointer
-    int fd = open(checkpoint, O_RDONLY); // Open in read-only mode
+    int fd = open(checkpoint_config->checkpoint, O_RDONLY); // Open in read-only mode
     if (fd == -1) { 
         fprintf(stderr, "open failed!\n"); 
         exit(EXIT_FAILURE); 
     }
 
-    *data = mmap(NULL, *file_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    checkpoint_config->data = mmap(NULL, checkpoint_config->file_size, PROT_READ, MAP_PRIVATE, fd, 0);
     
-    if (*data == MAP_FAILED) { 
+    if (checkpoint_config->data == MAP_FAILED) { 
         fprintf(stderr, "mmap failed!\n"); 
         exit(EXIT_FAILURE); 
     }
 
-    memory_map_weights(model, *data);
+    memory_map_weights(model, checkpoint_config->data);
     printf("Checkpoint read and weights mapped.\n");
+}
+
+GRUModel* load_gru_model(CheckpointConfig* checkpoint_config, GRUModelConfig model_config) {
+    printf("Loading GRU model from checkpoint...\n");
+
+    GRUModel* model = (GRUModel*)malloc(sizeof(GRUModel));
+    init_gru_model(model, model_config);
+
+    // Read the checkpoint and map the weights
+    read_checkpoint(checkpoint_config, model);
+
+    return model;
+}
+
+void gru_model_forward(GRUModel* model, float* input, float* h_prev, float* output, float* inter_input) {
+    printf("Running forward pass through GRU layers...\n");
+    for (int i = 0; i < model->config.num_layers; i++) {
+        if (i == 0) {
+            inter_input = input;
+        }
+        gru_layer_forward(&model->gru_layers[i], inter_input, h_prev + i * model->config.hidden_size);
+        memcpy(h_prev + i * model->config.hidden_size, model->gru_layers[i].state.hidden_state_buffer, model->gru_layers->config.hidden_size * sizeof(float));
+        inter_input = model->gru_layers[i].state.hidden_state_buffer; // inter_input points to hidden_state_buffer
+    }
+
+    printf("Running forward pass through the output layer...\n");
+    linear_layer_forward(&model->output_layer, inter_input, output);
 }
 
 int main() { 
     printf("Starting main...\n");
-    // Initialize GRU model
+    // // Initialize GRU model
     int input_dim = 1;
     int input_size = 15;
     int hidden_size = 64;
     int output_size = 4;
     int num_layers = 5;
 
-
     GRUModelConfig model_config = {input_dim, input_size, hidden_size, output_size, num_layers};
-    GRUModel* model = (GRUModel*)malloc(sizeof(GRUModel));
-    init_gru_model(model, model_config);
-
-    
-    // map the weights from the binary file
-    float* data;
-    size_t file_size;
-    read_checkpoint("GRUModel_5_64_1_para.bin", &data, &file_size, model);
-
-
+    CheckpointConfig checkpoint_config = {"GRUModel_5_64_1_para.bin", 0, NULL};
+    GRUModel* model = load_gru_model(&checkpoint_config, model_config);
 
     // Example input
     float* input = (float*)calloc(input_dim * input_size, sizeof(float)); // Adjust the size according to input_size
@@ -190,7 +215,6 @@ int main() {
         h_prev[i] = 0.5f; // Initialize to 1
     }
 
-
     // input scaling
     float* in_mean = (float[]){1.62f, 22.25f, 3.83f, 3.90f, 3.91f,
                                 3.8886f, 40.52f, 45.20f, 35.51f, 11.53f,
@@ -200,24 +224,8 @@ int main() {
                                 3.23f, 4.32f, 3.85f, 14.11f, 27.65f}; 
     standard_scaler(inter_input, input, input_size, in_mean, in_std);
 
-    printf("Running forward pass through GRU layers...\n");
-    for (int i = 0; i < num_layers; i++) {
-        if (i == 0) {
-            inter_input = input;
-        }
-        //print out the input 
-        printf("Input: ");
-        for (int j = 0; j < input_dim * input_size; j++) {
-            printf("%f ", inter_input[j]);
-        }
-        printf("\n");
-        gru_layer_forward(&model->gru_layers[i], inter_input, h_prev + i * hidden_size);
-        memcpy(h_prev + i * hidden_size, model->gru_layers[i].state.hidden_state_buffer, model->gru_layers->config.hidden_size * sizeof(float));
-        inter_input = model->gru_layers[i].state.hidden_state_buffer; // inter_input points to hidden_state_buffer
-    }
+    gru_model_forward(model, inter_input, h_prev, output, inter_input);
 
-    printf("Running forward pass through the output layer...\n");
-    linear_layer_forward(&model->output_layer, model->gru_layers[2].state.hidden_state_buffer, output);
 
     // Print the output
     printf("Output: ");
@@ -234,7 +242,7 @@ int main() {
     free_gru_model(model, false); // Free the model and its internal memory
     free(model); // Free the model itself
 
-    munmap(data, file_size);
+    munmap(checkpoint_config.data, checkpoint_config.file_size);
 
     printf("Main finished.\n");
     return 0;
