@@ -11,8 +11,19 @@ static int __map_mman_error(const uint32_t err, const int deferr)
 {
     if (err == 0)
         return 0;
-    //TODO: implement
-    return err;
+    switch (err) {
+        case ERROR_INVALID_HANDLE:
+            return EBADF;
+        case ERROR_INVALID_PARAMETER:
+            return EINVAL;
+        case ERROR_ACCESS_DENIED:
+            return EACCES;
+        case ERROR_NOT_ENOUGH_MEMORY:
+        case ERROR_OUTOFMEMORY:
+            return ENOMEM;
+        default:
+            return deferr;
+    }
 }
 
 static uint32_t __map_mmap_prot_page(const int prot)
